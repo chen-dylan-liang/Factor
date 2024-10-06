@@ -26,14 +26,20 @@ else:
     traj_name = "test"
 
 # initialize robot arm
-arm = XArmAPI(ip, is_radian=True)
+arm = XArmAPI(ip)
 arm.motion_enable(enable=True)
 arm.ft_sensor_enable(0)
 arm.set_mode(0)
 arm.set_state(state=0)
 time.sleep(0.5)
-arm.set_position(x=496.2, y=-28.8, z=469.4, roll=51.7, pitch=-85.9, yaw=125.6, wait=True)
+arm.reset(wait=True)
+arm.set_position(x=496.2, y=-28.8, z=469.4, roll=180, pitch=0, yaw=0, speed=100, wait=True)
+arm.set_position(x=496.2, y=-28.8, z=469.4, roll=51.7, pitch=-85.9, yaw=0, speed=100, wait=True)
+arm.set_position(x=496.2, y=-28.8, z=469.4, roll=51.7, pitch=-85.9, yaw=125.6, speed=100, wait=True)
 
+
+# arm.set_position(x=496.2, y=-28.8, z=469.4, roll=51.7, pitch=-85.9, yaw=125.6, speed=100, wait=True)
+# arm.set_position(x=300, y=0, z=150, roll=-180, pitch=0, yaw=0, speed=100, wait=True)
 
 def safe_exit(code):
     # turn off manual mode after recording
@@ -87,16 +93,20 @@ if see_ft_sensor_config:
         safe_exit(code)
 
 # turn on teach mode
-arm.set_mode(2)
-arm.set_state(0)
-time.sleep(0.5)
+#arm.set_mode(2)
+#arm.set_state(0)
+time.sleep(5)
 
 # collect data
-freq = 10
+freq = 50
+dur = 10
+n = freq * dur
 sleep_time = 1.0 / freq
 print_out = False
+save_data = True
 data = {'pos_data': [], 'pos_aa_data': [], 'joint_state_data': [], 'ext_f_data': [], 'raw_f_data': []}
-while arm.connected and arm.error_code == 0:
+print("START!!!!!!!!!!!!!!!!!!")
+for i in range(n):
     code, pos = arm.get_position()
     if code == 0:
         data['pos_data'].append(pos)
@@ -130,18 +140,18 @@ while arm.connected and arm.error_code == 0:
 
     if print_out:
         print(
-            "Iteration {}: pos={}, pos_aa={}, joint_states={}, ext_force={}, raw_force={}".format(len(data['pos_data']),
-                                                                                                  pos,
-                                                                                                  pos_aa, js, ext_force,
-                                                                                                  raw_force))
+            "Iteration {}: ext_force={}, raw_force={}".format(len(data['pos_data']),
+                                                              ext_force,
+                                                              raw_force))
+    if save_data:  # save traj
+        with open(traj_name + ".traj", 'wb') as file:
+            pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
+    time.sleep(sleep_time)
+
+if save_data:
     # save traj
     with open(traj_name + ".traj", 'wb') as file:
         pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-    time.sleep(sleep_time)
-
-# save traj
-with open(traj_name + ".traj", 'wb') as file:
-    pickle.dump(data, file, protocol=pickle.HIGHEST_PROTOCOL)
-time.sleep(1)
+    time.sleep(1)
 
 safe_exit(0)
