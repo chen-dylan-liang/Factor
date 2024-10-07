@@ -146,7 +146,6 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_da
     print("=====START DATA COLLECTION=====")
     os.system('say "Start collecting data"')
     for _i in range(_n):
-        print("Iter:{}".format(_i))
         _code, _pos = _arm.get_position()
         if _code == 0:
             _data['pos_data'].append(_pos)
