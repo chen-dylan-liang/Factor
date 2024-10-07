@@ -1,9 +1,10 @@
-# import os
+import os
 import sys
 import time
 import pickle
 import keyboard
-
+from threading import Thread
+# from multiprocess import Process
 # sys.path.append(os.path.join(os.path.dirname(__file__), '../../..'))
 from xarm.wrapper import XArmAPI
 
@@ -73,7 +74,7 @@ def turn_on_force_sensor(_arm, _see_ft_sensor_config=True):
     _arm.set_state(0)
     time.sleep(0.5)
     if _see_ft_sensor_config:
-        _code, config = arm.get_ft_senfor_config()
+        _code, config = _arm.get_ft_senfor_config()
         if _code == 0:
             print('ft_app_status: {}'.format(config[0]))
             print('ft_is_started: {}'.format(config[1]))
@@ -119,27 +120,48 @@ def load_traj(_traj_name):
     return _data
 
 
-def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False):
+def move_x(_arm, delta=10, speed=50):
+    _code, _pos = _arm.get_position()
+    return _arm.set_position(x=_pos[0] + delta, wait=True, speed=speed)
+
+
+def move_y(_arm, delta=10, speed=50):
+    _code, _pos = _arm.get_position()
+    return _arm.set_position(y=_pos[1] + delta, wait=True, speed=speed)
+
+
+def move_z(_arm, delta=10, speed=50):
+    _code, _pos = _arm.get_position()
+    return _arm.set_position(z=_pos[2] + delta, wait=True, speed=speed)
+
+
+def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_data=False):
+    """
+    This is a clock interruption in essence.
+    """
     # collect data
     _n = _freq * _dur
     _sleep_time = 1.0 / _freq
     _data = {'pos_data': [], 'pos_aa_data': [], 'joint_state_data': [], 'ext_f_data': [], 'raw_f_data': []}
     print("=====START DATA COLLECTION=====")
+    os.system('say "Start collecting data"')
     for _i in range(_n):
+        print("Iter:{}".format(_i))
         _code, _pos = _arm.get_position()
         if _code == 0:
             _data['pos_data'].append(_pos)
         else:
             print("Error in position data!!!")
-            save_traj(_data, _traj_name)
+            if _save_data:
+                save_traj(_data, _traj_name)
             safe_exit(_arm, _code)
-
         _code, _pos_aa = _arm.get_position_aa()
         if _code == 0:
             _data['pos_aa_data'].append(_pos_aa)
         else:
             print("Error in position axis angle data!!!")
-            save_traj(_data, _traj_name)
+            if _save_data:
+                save_traj(_data, _traj_name)
             safe_exit(_arm, _code)
 
         _code, _js = _arm.get_joint_states()
@@ -147,7 +169,8 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False):
             _data['joint_state_data'].append(_js)
         else:
             print("Error in joint state data!!!")
-            save_traj(_data, _traj_name)
+            if _save_data:
+                save_traj(_data, _traj_name)
             safe_exit(_arm, _code)
 
         _code, _ext_force = _arm.get_ft_sensor_data()
@@ -155,7 +178,8 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False):
             _data['ext_f_data'].append(_ext_force)
         else:
             print("Error in force data!!!")
-            save_traj(_data, _traj_name)
+            if _save_data:
+                save_traj(_data, _traj_name)
             safe_exit(_arm, _code)
 
         _raw_force = _arm.ft_raw_force
@@ -167,50 +191,65 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False):
                                                                   _ext_force,
                                                                   _raw_force))
         time.sleep(_sleep_time)
+    os.system('say "Finish collecting data"')
     print("=====FINISH DATA COLLECTION=====")
-    return _data
+    if _save_data:
+        save_traj(_data, _traj_name)
 
 
-def move_x(_arm, delta=10, speed=50):
-    _code, _pos = _arm.get_position()
-    _arm.set_position(x=_pos[0] + delta, wait=True,speed=speed)
-
-
-def move_y(_arm, delta=10,speed=50):
-    _code, _pos = _arm.get_position()
-    _arm.set_position(y=_pos[1] + delta, wait=True,speed=speed)
-
-
-def move_z(_arm, delta=10,speed=50):
-    _code, _pos = _arm.get_position()
-    _arm.set_position(z=_pos[2] + delta, wait=True,speed=speed)
+def keyboard_position_control(_arm, _delta=20, _speed=100):
+    """
+        This is a keyboard interruption in essence. We want it to be real-time.
+    """
+    print("=====START KEYBOARD CONTROL=====")
+    while True:
+        _event = keyboard.read_event()
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
+            move_x(_arm, delta=_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
+            move_x(_arm, delta=-_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
+            move_y(_arm, delta=-_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
+            move_y(_arm, delta=_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "up":
+            move_z(_arm, delta=_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "down":
+            move_z(_arm, delta=-_delta, speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
+            print("=====FINISH KEYBOARD CONTROL=====")
+            return
 
 
 if __name__ == "__main__":
     ip, traj_name = process_argv()
     arm = initialize_arm(ip)
-    set_to_init_pos(arm, speed=100)
+    speed = 100
+    set_to_init_pos(arm, speed=speed)
     turn_on_force_sensor(arm)
-    # enable_teach_mode(arm)
-    dur = 1
+    dur = 10
     freq = 50
+    delta = 20
     print_out = False
-    while True:
-        event = keyboard.read_event()
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-            data = collect_data(arm, traj_name, dur, freq, print_out)
-            save_traj(data, traj_name)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "s":
-            move_x(arm, delta=20,speed=100)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "w":
-            move_x(arm, delta=-20,speed=100)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "a":
-            move_y(arm, delta=-20,speed=100)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "d":
-            move_y(arm, delta=20,speed=100)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "up":
-            move_z(arm, delta=20,speed=100)
-        if event.event_type == keyboard.KEY_DOWN and event.name == "down":
-            move_z(arm, delta=-20,speed=100)
-        if event.event_type == keoard.KEY_DOWN and event.name == 'esc':
-            safe_exit(arm, 0)
+    save_data = False
+    teach = False
+    if not teach:
+        while True:
+            event = keyboard.read_event()
+            if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+                t_manipulate = Thread(target=lambda: keyboard_position_control(arm, delta, speed))
+                t_collect = Thread(target=lambda: collect_data(arm, traj_name, dur, freq, print_out, save_data))
+                t_manipulate.start()
+                t_collect.start()
+                t_manipulate.join()
+                t_collect.join()
+            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+                safe_exit(arm, 0)
+    else:
+        enable_teach_mode(arm)
+        while True:
+            event = keyboard.read_event()
+            if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+                collect_data(arm, traj_name, dur, freq, print_out, save_data)
+            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+                safe_exit(arm, 0)
