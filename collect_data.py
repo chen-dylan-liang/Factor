@@ -120,25 +120,27 @@ def load_traj(_traj_name):
     return _data
 
 
-def move_x(_arm, delta=10, speed=50):
+def move_x(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(x=_pos[0] + delta, wait=True, speed=speed)
+    return _arm.set_position(x=_pos[0] + _delta, wait=True, speed=_speed)
 
 
-def move_y(_arm, delta=10, speed=50):
+def move_y(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(y=_pos[1] + delta, wait=True, speed=speed)
+    return _arm.set_position(y=_pos[1] + _delta, wait=True, speed=_speed)
 
 
-def move_z(_arm, delta=10, speed=50):
+def move_z(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(z=_pos[2] + delta, wait=True, speed=speed)
+    return _arm.set_position(z=_pos[2] + _delta, wait=True, speed=_speed)
 
 
 def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_data=False):
     """
     This is a clock interruption in essence.
     """
+    _arm = initialize_arm("192.168.1.236")
+    turn_on_force_sensor(_arm)
     # collect data
     _n = _freq * _dur
     _sleep_time = 1.0 / _freq
@@ -204,17 +206,17 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
     while True:
         _event = keyboard.read_event()
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
-            move_x(_arm, delta=_delta, speed=_speed)
+            move_x(_arm, _delta=_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
-            move_x(_arm, delta=-_delta, speed=_speed)
+            move_x(_arm, _delta=-_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
-            move_y(_arm, delta=-_delta, speed=_speed)
+            move_y(_arm, _delta=-_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
-            move_y(_arm, delta=_delta, speed=_speed)
+            move_y(_arm, _delta=_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "up":
-            move_z(_arm, delta=_delta, speed=_speed)
+            move_z(_arm, _delta=_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "down":
-            move_z(_arm, delta=-_delta, speed=_speed)
+            move_z(_arm, _delta=-_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
             print("=====FINISH KEYBOARD CONTROL=====")
             return
@@ -226,8 +228,8 @@ if __name__ == "__main__":
     speed = 100
     set_to_init_pos(arm, speed=speed)
     turn_on_force_sensor(arm)
-    dur = 10
-    freq = 50
+    dur = 1000
+    freq = 10
     delta = 20
     print_out = False
     save_data = False
