@@ -31,11 +31,11 @@ def process_argv():
     return _ip, _traj_name
 
 
-def initialize_arm(_ip):
+def initialize_arm(_ip, _mode=-0):
     _arm = XArmAPI(_ip)
     _arm.motion_enable(enable=True)
     _arm.ft_sensor_enable(0)
-    _arm.set_mode(0)
+    _arm.set_mode(_mode)
     _arm.set_state(state=0)
     time.sleep(0.5)
     return _arm
@@ -109,6 +109,12 @@ def enable_teach_mode(_arm):
     time.sleep(0.5)
 
 
+def enable_online_mode(_arm):
+    _arm.set_mode(7)
+    _arm.set_state(0)
+    time.sleep(0.5)
+
+
 def save_traj(_data, _traj_name):
     with open(_traj_name + ".traj", 'wb') as file:
         pickle.dump(_data, file, protocol=pickle.HIGHEST_PROTOCOL)
@@ -127,7 +133,7 @@ def move_x(_arm, _delta=10, _speed=50):
 
 def move_y(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(y=_pos[1] + _delta, wait=True, speed=_speed)
+    return _arm.set_position(y=_pos[1] + _delta, wait=False, speed=_speed)
 
 
 def move_z(_arm, _delta=10, _speed=50):
@@ -139,8 +145,6 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_da
     """
     This is a clock interruption in essence.
     """
-    _arm = initialize_arm("192.168.1.236")
-    turn_on_force_sensor(_arm)
     # collect data
     _n = _freq * _dur
     _sleep_time = 1.0 / _freq
@@ -228,13 +232,15 @@ if __name__ == "__main__":
     speed = 100
     set_to_init_pos(arm, speed=speed)
     turn_on_force_sensor(arm)
-    dur = 1000
-    freq = 10
-    delta = 20
+
+    dur = 10
+    freq = 50
+    delta = 10
     print_out = False
     save_data = False
     teach = False
     if not teach:
+        enable_online_mode(arm)
         while True:
             event = keyboard.read_event()
             if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
