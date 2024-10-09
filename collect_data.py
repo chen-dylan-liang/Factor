@@ -68,7 +68,9 @@ def safe_exit(_arm, _code):
 def turn_on_force_sensor(_arm, _see_ft_sensor_config=True):
     # turn on the force sensor
     _arm.ft_sensor_enable(1)
+    time.sleep(0.5)
     _arm.ft_sensor_set_zero()
+    time.sleep(0.5)
     _arm.ft_sensor_app_set(0)
     time.sleep(0.5)
     _arm.set_state(0)
@@ -133,7 +135,7 @@ def move_x(_arm, _delta=10, _speed=50):
 
 def move_y(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(y=_pos[1] + _delta, wait=False, speed=_speed)
+    return _arm.set_position(y=_pos[1] + _delta, wait=True, speed=_speed)
 
 
 def move_z(_arm, _delta=10, _speed=50):
@@ -205,22 +207,53 @@ def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_da
 def keyboard_position_control(_arm, _delta=20, _speed=100):
     """
         This is a keyboard interruption in essence. We want it to be real-time.
+        It can achieve smooth linear motion when mode == 7
     """
     print("=====START KEYBOARD CONTROL=====")
+    press_down = False
+    _max_delta = 50  # to prevent jerky motion in the first call to set_position when pressing down a/d/s/w/up/down
     while True:
         _event = keyboard.read_event()
+        if _event.event_type == keyboard.KEY_UP and (_event.name == "s" or _event.name == "w" or
+                                                     _event.name == "a" or _event.name == "d" or
+                                                     _event.name == "up" or _event.name == "down"):
+            press_down = False
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
-            move_x(_arm, _delta=_delta, _speed=_speed)
+            if press_down:
+                move_x(_arm, _delta=_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_x(_arm, _delta=_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
-            move_x(_arm, _delta=-_delta, _speed=_speed)
+            if press_down:
+                move_x(_arm, _delta=-_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_x(_arm, _delta=-_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
-            move_y(_arm, _delta=-_delta, _speed=_speed)
+            if press_down:
+                move_y(_arm, _delta=-_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_y(_arm, _delta=-_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
-            move_y(_arm, _delta=_delta, _speed=_speed)
+            if press_down:
+                move_y(_arm, _delta=_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_y(_arm, _delta=_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "up":
-            move_z(_arm, _delta=_delta, _speed=_speed)
+            if press_down:
+                move_z(_arm, _delta=_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_z(_arm, _delta=_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "down":
-            move_z(_arm, _delta=-_delta, _speed=_speed)
+            if press_down:
+                move_z(_arm, _delta=-_delta, _speed=_speed)
+            else:
+                press_down = True
+                move_z(_arm, _delta=-_max_delta, _speed=_speed)
         if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
             print("=====FINISH KEYBOARD CONTROL=====")
             return
@@ -228,35 +261,40 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
 
 if __name__ == "__main__":
     ip, traj_name = process_argv()
-    arm = initialize_arm(ip)
-    speed = 100
-    set_to_init_pos(arm, speed=speed)
-    turn_on_force_sensor(arm)
-
-    dur = 10
-    freq = 50
-    delta = 10
-    print_out = False
-    save_data = False
-    teach = False
-    if not teach:
-        enable_online_mode(arm)
-        while True:
-            event = keyboard.read_event()
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-                t_manipulate = Thread(target=lambda: keyboard_position_control(arm, delta, speed))
-                t_collect = Thread(target=lambda: collect_data(arm, traj_name, dur, freq, print_out, save_data))
-                t_manipulate.start()
-                t_collect.start()
-                t_manipulate.join()
-                t_collect.join()
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
-                safe_exit(arm, 0)
+    collect = True
+    if collect:
+        arm = initialize_arm(ip)
+        set_to_init_pos(arm, speed=300)
+        turn_on_force_sensor(arm)
+        dur = 10
+        freq = 50
+        print_out = False
+        save_data = False
+        teach = False
+        if not teach:
+            enable_online_mode(arm)
+            speed = 80
+            delta = 20
+            while True:
+                event = keyboard.read_event()
+                if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+                    t_manipulate = Thread(target=lambda: keyboard_position_control(arm, delta, speed))
+                    t_collect = Thread(target=lambda: collect_data(arm, traj_name, dur, freq, print_out, save_data))
+                    t_manipulate.start()
+                    t_collect.start()
+                    t_manipulate.join()
+                    t_collect.join()
+                if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+                    safe_exit(arm, 0)
+        else:
+            enable_teach_mode(arm)
+            while True:
+                event = keyboard.read_event()
+                if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+                    collect_data(arm, traj_name, dur, freq, print_out, save_data)
+                if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+                    safe_exit(arm, 0)
     else:
-        enable_teach_mode(arm)
-        while True:
-            event = keyboard.read_event()
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-                collect_data(arm, traj_name, dur, freq, print_out, save_data)
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
-                safe_exit(arm, 0)
+        data = load_traj(traj_name)
+        for k, v in zip(data.keys(), data.values()):
+            print("{}:{}".format(k, v))
