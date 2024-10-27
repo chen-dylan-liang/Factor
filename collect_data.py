@@ -130,17 +130,17 @@ def load_traj(_traj_name):
 
 def move_x(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(x=_pos[0] + _delta, wait=True, speed=_speed)
+    return _arm.set_position(x=_pos[0] + _delta, wait=False, speed=_speed)
 
 
 def move_y(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(y=_pos[1] + _delta, wait=True, speed=_speed)
+    return _arm.set_position(y=_pos[1] + _delta, wait=False, speed=_speed)
 
 
 def move_z(_arm, _delta=10, _speed=50):
     _code, _pos = _arm.get_position()
-    return _arm.set_position(z=_pos[2] + _delta, wait=True, speed=_speed)
+    return _arm.set_position(z=_pos[2] + _delta, wait=False, speed=_speed)
 
 
 def collect_data(_arm, _traj_name, _dur=10, _freq=50, _print_out=False, _save_data=False):
@@ -218,6 +218,53 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
                                                      _event.name == "a" or _event.name == "d" or
                                                      _event.name == "up" or _event.name == "down"):
             press_down = False
+            # print("Stop")
+            # _arm.set_state(4)  # as suggested by the support team
+            # time.sleep(0.2)
+        """    
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_x(_arm, _delta=_delta, _speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()sssssw
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_x(_arm, _delta=-_delta, _speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_y(_arm, _delta=-_delta, _speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_y(_arm, _delta=_delta, _speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "up":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_z(_arm, _delta=_delta, _speed=_speed)
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "down":
+            if not press_down:
+                press_down = True
+                _arm.clean_conf()
+                _arm.set_state(0)  # as suggested by the support team
+                time.sleep(0.2)
+                move_z(_arm, _delta=-_delta, _speed=_speed)
+        """
         if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
             if press_down:
                 move_x(_arm, _delta=_delta, _speed=_speed)
@@ -258,7 +305,6 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
             print("=====FINISH KEYBOARD CONTROL=====")
             return
 
-
 if __name__ == "__main__":
     ip, traj_name = process_argv()
     collect = True
@@ -269,12 +315,12 @@ if __name__ == "__main__":
         dur = 10
         freq = 50
         print_out = False
-        save_data = False
+        save_data = True
         teach = False
         if not teach:
             enable_online_mode(arm)
             speed = 80
-            delta = 20
+            delta = 10  # as suggested by the support team
             while True:
                 event = keyboard.read_event()
                 if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
