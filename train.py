@@ -1,4 +1,4 @@
-import pytorch_lightning as pl
+import lightning as pl
 from Tactor.model import FeedForwardModel
 from Tactor.dataloader import TrajectoryDataset
 import torch
