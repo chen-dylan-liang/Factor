@@ -42,6 +42,8 @@ def deploy_model(_arm, _model, _dur=20, _seq_len=10, _print_out=False):
             _future_pos = list(_model(th.tensor(_pos + _force, dtype=th.float32)))  # 10*6
             for i in range(_seq_len):
                 _arm.set_position(*_future_pos[i * 6: (i + 1) * 6], speed=50, wait=True)
+                if _print_out:
+                    print(dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[i * 6: (i + 1) * 6])))
             end = time.time()
             if end - start >= _dur:
                 break
