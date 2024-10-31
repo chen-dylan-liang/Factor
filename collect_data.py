@@ -309,7 +309,7 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
 
 if __name__ == "__main__":
     ip, traj_name = process_argv()
-    collect = True
+    collect = False
     if collect:
         arm = initialize_arm(ip)
         set_to_init_pos(arm, speed=300)
