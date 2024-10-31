@@ -27,7 +27,7 @@ def process_argv():
     if len(sys.argv) >= 3:
         _traj_name = sys.argv[2]
     else:
-        _traj_name = "test"
+        _traj_name = "test.traj"
     return _ip, _traj_name
 
 
@@ -118,12 +118,13 @@ def enable_online_mode(_arm):
 
 
 def save_traj(_data, _traj_name):
-    with open(_traj_name + ".traj", 'wb') as file:
+    os.makedirs("./data", exist_ok=True)
+    with open("./data/"+_traj_name, 'wb') as file:
         pickle.dump(_data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load_traj(_traj_name):
-    with open(_traj_name + ".traj", 'rb') as file:
+    with open("./data/"+_traj_name, 'rb') as file:
         _data = pickle.load(file)
     return _data
 
