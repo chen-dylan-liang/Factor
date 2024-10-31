@@ -31,7 +31,7 @@ def process_argv():
     return _ip, _traj_name
 
 
-def initialize_arm(_ip, _mode=-0):
+def initialize_arm(_ip, _mode=0):
     _arm = XArmAPI(_ip)
     _arm.motion_enable(enable=True)
     _arm.ft_sensor_enable(0)
@@ -119,12 +119,12 @@ def enable_online_mode(_arm):
 
 def save_traj(_data, _traj_name):
     os.makedirs("./data", exist_ok=True)
-    with open("./data/"+_traj_name, 'wb') as file:
+    with open("./data/" + _traj_name, 'wb') as file:
         pickle.dump(_data, file, protocol=pickle.HIGHEST_PROTOCOL)
 
 
 def load_traj(_traj_name):
-    with open("./data/"+_traj_name, 'rb') as file:
+    with open("./data/" + _traj_name, 'rb') as file:
         _data = pickle.load(file)
     return _data
 
@@ -305,6 +305,7 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
         if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
             print("=====FINISH KEYBOARD CONTROL=====")
             return
+
 
 if __name__ == "__main__":
     ip, traj_name = process_argv()
