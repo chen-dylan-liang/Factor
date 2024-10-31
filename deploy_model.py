@@ -33,10 +33,9 @@ def load_model(_model_name):
     return _model
 
 
-def deploy_model(_arm, _model, _dur=20, _print_out=False):
+def deploy_model(_arm, _model,  _print_out=False):
     _model.eval()
     with th.no_grad():
-        start = time.time()
         itr = 0
         print("=====START TESTING THE MODEL=====")
         os.system('say "Start testing the model"')
@@ -48,9 +47,8 @@ def deploy_model(_arm, _model, _dur=20, _print_out=False):
             if _print_out:
                 print("{}: {}".format(itr,
                                       dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[-6:]))))
-            end = time.time()
             itr = itr + 1
-            if end - start >= _dur:
+            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
                 break
 
 
@@ -62,9 +60,8 @@ if __name__ == "__main__":
     turn_on_force_sensor(arm)
     while True:
         event = keyboard.read_event()
-        dur = 200
         print_out = True
         if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-            deploy_model(arm, model, dur,  print_out)
+            deploy_model(arm, model, print_out)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
             safe_exit(arm, 0)
