@@ -1,8 +1,9 @@
-import sys
+import sys, os
 from collect_data import initialize_arm, set_to_init_pos, turn_on_force_sensor, safe_exit
 import torch as th
 from model import FeedForwardModel
 import time
+import keyboard
 
 
 def process_argv():
@@ -32,19 +33,23 @@ def load_model(_model_name):
     return _model
 
 
-def deploy_model(_arm, _model, _dur=20, _seq_len=10, _print_out=False):
+def deploy_model(_arm, _model, _dur=20, _print_out=False):
     _model.eval()
     with th.no_grad():
         start = time.time()
+        itr = 0
+        print("=====START TESTING THE MODEL=====")
+        os.system('say "Start testing the model"')
         while True:
             _code_p, _pos = _arm.get_position()
             _code_f, _force = _arm.get_ft_sensor_data()
             _future_pos = list(_model(th.tensor(_pos + _force, dtype=th.float32)))  # 10*6
-            for i in range(_seq_len):
-                _arm.set_position(*_future_pos[i * 6: (i + 1) * 6], speed=50, wait=True)
-                if _print_out:
-                    print(dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[i * 6: (i + 1) * 6])))
+            _arm.set_position(*_future_pos[-6:], speed=50, wait=True)
+            if _print_out:
+                print("{}: {}".format(itr,
+                                      dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[-6:]))))
             end = time.time()
+            itr = itr + 1
             if end - start >= _dur:
                 break
 
@@ -55,8 +60,11 @@ if __name__ == "__main__":
     arm = initialize_arm(ip, 0)  # use position control mode
     set_to_init_pos(arm, speed=300)
     turn_on_force_sensor(arm)
-    dur = 20
-    print_out = False
-    seq_len = 10
-    deploy_model(arm, model, dur, seq_len, print_out)
-    safe_exit(arm, 0)
+    while True:
+        event = keyboard.read_event()
+        dur = 200
+        print_out = True
+        if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+            deploy_model(arm, model, dur,  print_out)
+        if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+            safe_exit(arm, 0)
