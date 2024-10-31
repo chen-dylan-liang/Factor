@@ -33,23 +33,29 @@ def load_model(_model_name):
     return _model
 
 
-def deploy_model(_arm, _model,  _print_out=False):
+def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
     _model.eval()
+    if _look_ahead < 1:
+        _look_ahead = 1
+    if _look_ahead > 10:
+        _look_ahead = 10
     with th.no_grad():
         itr = 0
         print("=====START TESTING THE MODEL=====")
         os.system('say "Start testing the model"')
+        start = time.time()
         while True:
             _code_p, _pos = _arm.get_position()
             _code_f, _force = _arm.get_ft_sensor_data()
-            _future_pos = list(_model(th.tensor(_pos + _force, dtype=th.float32)))  # 10*6
-            _arm.set_position(*_future_pos[-6:], speed=50, wait=True)
+            _future_pos = [float(x) for x in _model(th.tensor(_pos + _force, dtype=th.float32))]  # 10*6
+            _arm.set_position(*_future_pos[6*(_look_ahead-1):6*_look_ahead], speed=50, wait=True)
+            end = time.time()
             if _print_out:
-                print("{}: {}".format(itr,
-                                      dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[-6:]))))
+                print("iter:{}, time:{}, control:{}".format(itr, end - start,
+                                         dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[-6:]))))
             itr = itr + 1
-            _event = keyboard.read_event()
-            if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
+            if end - start >= _dur:
+                print("Reached time limit.")
                 break
 
 
@@ -63,6 +69,7 @@ if __name__ == "__main__":
         event = keyboard.read_event()
         print_out = True
         if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-            deploy_model(arm, model, print_out)
+            dur = 10
+            deploy_model(arm, model, dur, 5, print_out)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
             safe_exit(arm, 0)

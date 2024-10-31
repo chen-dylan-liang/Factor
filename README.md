@@ -9,6 +9,6 @@
 
 - ***sudo python3 deploy_model.py ip_address model_name***
     - Go to System Preferences -> Security & Privacy -> Accessibility to allow the terminal or the IDE to control your computer if there's segfault.
+    - Set "dur" to your desirable trajectory length (in seconds)
     - Press "enter" to start testing the model
-    - Press "esc" to end the test
-    - Press "esc" again to set the arm back to the initial position
+    - Press "esc" after "dur" seconds to set the arm back to the initial position
