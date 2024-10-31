@@ -48,7 +48,8 @@ def deploy_model(_arm, _model,  _print_out=False):
                 print("{}: {}".format(itr,
                                       dict(zip(["x", "y", "z", "roll", "pitch", "yaw"], _future_pos[-6:]))))
             itr = itr + 1
-            if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+            _event = keyboard.read_event()
+            if _event.event_type == keyboard.KEY_DOWN and _event.name == 'esc':
                 break
 
 
