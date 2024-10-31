@@ -10,6 +10,6 @@
 - ***sudo python3 deploy_model.py ip_address model_name***
     - Go to System Preferences -> Security & Privacy -> Accessibility to allow the terminal or the IDE to control your computer if there's segfault.
     - Set "dur" to your desirable trajectory length (in seconds)
-    - "look_ahead=5" is a magic parameter. Setting it too low (such as 1) may result in jerky and slow movements while setting it too high (such as 10) may result in unstable behaviours.
+    - "_look_ahead=5" is a magic parameter. Setting it too low (such as 1) may result in jerky and slow movements while setting it too high (such as 10) may result in unstable behaviours.
     - Press "enter" to start testing the model
     - Press "esc" after "dur" seconds to set the arm back to the initial position
