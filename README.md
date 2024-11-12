@@ -1,5 +1,5 @@
 ### The Course Project for Yale CPSC 473/573, Intelligent Robotics Laboratory
-
+***Alan Chirong Li, Chen (Dylan) Liang, TJ Vitchuripop***
 - ***sudo python3 collect_data.py ip_address traj_name***
     - Go to System Preferences -> Security & Privacy -> Accessibility to allow the terminal or the IDE to control your computer if there's segfault.
     - Press "enter" to start collecting data.
