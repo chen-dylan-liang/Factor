@@ -1,8 +1,9 @@
 import os, glob, time
 import numpy as np
-from collect_data import initialize_arm, set_to_init_pos, turn_on_force_sensor, enable_online_mode, safe_exit
-from deploy_model import process_argv, load_model
+from collect_data import initialize_arm, set_to_init_pos, turn_on_force_sensor, enable_online_mode, safe_exit, keyboard_position_control
+from deploy_model import process_argv, load_model, deploy_model
 import keyboard
+from threading import Thread
 
 
 def generate_point(min_val, max_val):
@@ -28,7 +29,7 @@ def evaluate(arm, n, dur, tol, range_tract=0.7):
     # evaluate
     for i in range(n):
         point = generate_point(min_pos, max_pos)
-        print(f"Point {i+1}: {point}")
+        print(f"Point {i + 1}: {point}")
         os.system(f'say "Start point {i + 1}"')
         time.sleep(0.5)
         flag = False
@@ -71,9 +72,21 @@ if __name__ == "__main__":
     set_to_init_pos(robot, speed=300)
     turn_on_force_sensor(robot)
     enable_online_mode(robot)
+    npt = 10
+    duration = 20
+    use_model = False
     while True:
         event = keyboard.read_event()
         if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-            evaluate(robot, 10, 20, 1e-1)
+            if use_model:
+                t_daemon = Thread(target=lambda: deploy_model(robot,model, duration*npt+5, 10, False))
+            else:
+                t_daemon = Thread(target=lambda: keyboard_position_control(robot, 10, 80))
+            t_eval = Thread(target=lambda:  evaluate(robot, npt, duration, 1e-1))
+            t_daemon.start()
+            t_eval.start()
+            t_daemon.join()
+            t_eval.join()
+            evaluate(robot, model, 10, 20, 1e-1)
         if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
             safe_exit(robot, 0)
