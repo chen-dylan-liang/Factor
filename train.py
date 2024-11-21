@@ -6,7 +6,7 @@ from torch.utils.data import DataLoader
 import glob
 
 
-def main():
+def train():
     # Configuration
     data_dir = "./data"
     batch_size = 32
@@ -31,7 +31,7 @@ def main():
     # Initialize model
     input_dim = 6  # 6 force features
     hidden_dim = 128
-    output_dim = seq_length * 6  # seq_length timesteps * 6 features
+    output_dim = seq_length * 3  # seq_length timesteps * 3 features
 
     model = FeedForwardModel(input_dim, hidden_dim, output_dim)
 
@@ -53,4 +53,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    train()
