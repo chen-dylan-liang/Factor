@@ -47,12 +47,13 @@ def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
         start = time.time()
         while True:
             _code_p, _pos = _arm.get_position()
+            _pos = np.array(_pos[:3])
             _code_f, _force = _arm.get_ft_sensor_data()
-            _future_pos = [float(x) for x in _model(th.tensor(_pos[0:3] + _force[0:3], dtype=th.float32))]  # 10*6
-            _new_signal = np.array(_future_pos[0:6 * _look_ahead]).reshape(-1, 6)
+            _future_pos = [float(x) for x in _model(th.tensor(_force, dtype=th.float32))]  # 10*3
+            _new_signal = np.array(_future_pos[0:3 * _look_ahead]).reshape(-1, 3)
             _new_signal = np.mean(_new_signal, axis=0)
-            _control_signal = _new_signal
-            _arm.set_position(*list(_control_signal[0:3]), speed=40, wait=False)
+            _control_signal = _new_signal + _pos
+            _arm.set_position(*list(_control_signal), speed=40, wait=False)
             end = time.time()
             if _print_out:
                 print("iter:{}, time:{}, control:{}".format(itr, end - start,
