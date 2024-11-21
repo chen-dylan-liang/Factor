@@ -48,11 +48,11 @@ def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
         while True:
             _code_p, _pos = _arm.get_position()
             _code_f, _force = _arm.get_ft_sensor_data()
-            _future_pos = [float(x) for x in _model(th.tensor(_pos + _force, dtype=th.float32))]  # 10*6
+            _future_pos = [float(x) for x in _model(th.tensor(_pos[0:3] + _force[0:3], dtype=th.float32))]  # 10*6
             _new_signal = np.array(_future_pos[0:6 * _look_ahead]).reshape(-1, 6)
             _new_signal = np.mean(_new_signal, axis=0)
             _control_signal = _new_signal
-            _arm.set_position(*(list(_control_signal[0:3])), speed=80, wait=True)
+            _arm.set_position(*list(_control_signal[0:3]), speed=40, wait=False)
             end = time.time()
             if _print_out:
                 print("iter:{}, time:{}, control:{}".format(itr, end - start,
@@ -67,16 +67,18 @@ def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
 
 if __name__ == "__main__":
     ip, model_name = process_argv()
-    model = load_model("model.ckpt")
+    model = load_model("model_simple_xyz.ckpt")
     arm = initialize_arm(ip, 0)  # use position control mode
+    # set collision sensitivity to 0
+    arm.set_collision_sensitivity(0)
     set_to_init_pos(arm, speed=300)
     turn_on_force_sensor(arm)
-    # enable_online_mode(arm)
+    enable_online_mode(arm)
     while True:
-        event = keyboard.read_event()
+        # event = keyboard.read_event()
         print_out = True
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
-            dur = 20
-            deploy_model(arm, model, dur, 10, print_out)
-        if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
-            safe_exit(arm, 0)
+        # if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
+        dur = 10000000
+        deploy_model(arm, model, dur, 10, print_out)
+        # if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
+            # safe_exit(arm, 0)

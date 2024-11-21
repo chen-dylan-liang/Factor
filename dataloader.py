@@ -21,17 +21,14 @@ class TrajectoryDataset(Dataset):
         """Loads all data files and generates input/target pairs."""
         for file_path in self.file_paths:
             data = np.load(file_path, allow_pickle=True)
+            inputs = torch.tensor(data['ext_f_data'], dtype=torch.float32)  # (500, 6)
             pos_data = torch.tensor(data['pos_data'], dtype=torch.float32)  # (500, 6)
-            ext_f_data = torch.tensor(data['ext_f_data'], dtype=torch.float32)  # (500, 6)
-            
-            # Combine position and force data along the last dimension
-            inputs = torch.cat((pos_data, ext_f_data), dim=1)  # (500, 12)
-
             # Generate all possible input/target pairs within this episode
             for start_idx in range(inputs.shape[0] - self.seq_length):
-                current_state = inputs[start_idx]  # (12,)
-                future_positions = pos_data[start_idx + 1 : start_idx + 1 + self.seq_length]  # (seq_length, 6)
-                target = future_positions.reshape(-1)  # Flatten to (seq_length * 6,)
+                current_state = inputs[start_idx]  # (6,)
+                displacements = (pos_data[start_idx + 1 : start_idx + 1 + self.seq_length] -
+                                 pos_data[start_idx : start_idx + self.seq_length])  # (seq_length, 6)
+                target = displacements.reshape(-1)  # Flatten to (seq_length * 6,)
                 
                 # Store as tuple in self.data
                 self.data.append((current_state, target))

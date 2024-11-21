@@ -266,37 +266,37 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
                 time.sleep(0.2)
                 move_z(_arm, _delta=-_delta, _speed=_speed)
         """
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
             if press_down:
                 move_x(_arm, _delta=_delta, _speed=_speed)
             else:
                 press_down = True
                 move_x(_arm, _delta=_max_delta, _speed=_speed)
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
             if press_down:
                 move_x(_arm, _delta=-_delta, _speed=_speed)
             else:
                 press_down = True
                 move_x(_arm, _delta=-_max_delta, _speed=_speed)
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "a":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "w":
             if press_down:
                 move_y(_arm, _delta=-_delta, _speed=_speed)
             else:
                 press_down = True
                 move_y(_arm, _delta=-_max_delta, _speed=_speed)
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "d":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "s":
             if press_down:
                 move_y(_arm, _delta=_delta, _speed=_speed)
             else:
                 press_down = True
                 move_y(_arm, _delta=_max_delta, _speed=_speed)
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "up":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "q":
             if press_down:
                 move_z(_arm, _delta=_delta, _speed=_speed)
             else:
                 press_down = True
                 move_z(_arm, _delta=_max_delta, _speed=_speed)
-        if _event.event_type == keyboard.KEY_DOWN and _event.name == "down":
+        if _event.event_type == keyboard.KEY_DOWN and _event.name == "e":
             if press_down:
                 move_z(_arm, _delta=-_delta, _speed=_speed)
             else:
@@ -309,12 +309,12 @@ def keyboard_position_control(_arm, _delta=20, _speed=100):
 
 if __name__ == "__main__":
     ip, traj_name = process_argv()
-    collect = False
+    collect = True
     if collect:
-        arm = initialize_arm(ip)
+        arm =initialize_arm(ip)
         set_to_init_pos(arm, speed=300)
         turn_on_force_sensor(arm)
-        dur = 10
+        dur = 60
         freq = 50
         print_out = False
         save_data = True

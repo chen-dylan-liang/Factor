@@ -3,20 +3,21 @@ import torch.nn as nn
 import lightning as pl
 import torch.optim as optim
 
+
 class FeedForwardModel(pl.LightningModule):
     def __init__(self, input_dim, hidden_dim, output_dim, learning_rate=0.001):
         super(FeedForwardModel, self).__init__()
         self.save_hyperparameters()
-        
+
         # Define network layers
         self.fc1 = nn.Linear(input_dim, hidden_dim)
         self.fc2 = nn.Linear(hidden_dim, hidden_dim)
         self.fc3 = nn.Linear(hidden_dim, output_dim)
         self.relu = nn.ReLU()
-        
+
         # Define loss
         self.criterion = nn.MSELoss()
-        
+
     def forward(self, x):
         x = self.relu(self.fc1(x))
         x = self.relu(self.fc2(x))
