@@ -42,7 +42,7 @@ def step_model(_arm, _model, _look_ahead):
     _new_signal = np.array(_future_pos[0:3 * _look_ahead]).reshape(-1, 3)
     _new_signal = np.mean(_new_signal, axis=0)
     _control_signal = _new_signal + np.array(_pos)
-    _arm.set_position(*list(_control_signal), speed=40, wait=False)
+    _arm.set_position(*list(_control_signal), speed=50, wait=False)
     return _pos, _force, _control_signal
 
 
@@ -54,8 +54,6 @@ def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
         _look_ahead = 10
     with th.no_grad():
         itr = 0
-        print("=====START TESTING THE MODEL=====")
-        os.system('say "Start testing the model"')
         start = time.time()
         while True:
             _, _force, _control_signal = step_model(_arm, _model, _look_ahead)
@@ -73,11 +71,11 @@ def deploy_model(_arm, _model, _dur=10, _look_ahead=5, _print_out=False):
 
 if __name__ == "__main__":
     ip, model_name = process_argv()
-    model = load_model("model_simple_xyz.ckpt")
+    model = load_model("model_delta_final.ckpt")
     arm = initialize_arm(ip, 0)  # use position control mode
     # set collision sensitivity to 0
     arm.set_collision_sensitivity(0)
-    set_to_init_pos(arm, speed=300)
+    set_to_init_pos(arm, speed=60)
     turn_on_force_sensor(arm)
     enable_online_mode(arm)
     while True:
@@ -85,6 +83,8 @@ if __name__ == "__main__":
         print_out = True
         # if event.event_type == keyboard.KEY_DOWN and event.name == 'enter':
         dur = 10000000
+        print("=====START TESTING THE MODEL=====")
+        os.system('say "Start testing the model"')
         deploy_model(arm, model, dur, 10, print_out)
         # if event.event_type == keyboard.KEY_DOWN and event.name == 'esc':
         # safe_exit(arm, 0)

@@ -311,7 +311,7 @@ if __name__ == "__main__":
     ip, traj_name = process_argv()
     collect = True
     if collect:
-        arm =initialize_arm(ip)
+        arm = initialize_arm(ip)
         set_to_init_pos(arm, speed=300)
         turn_on_force_sensor(arm)
         dur = 60
