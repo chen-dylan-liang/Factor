@@ -26,12 +26,12 @@ def concat_data(base_name, output_name):
         d = np.load(path, allow_pickle=True)
         for key in keys:
             base_dict[key] += d[key][:len(d['time_elapsed'])]
+
     while len(base_dict['time_elapsed']) > 10:
-        mean = np.mean(base_dict['time_elapsed'])
-        deviations = np.abs(np.array(base_dict['time_elapsed']) - mean)
-        max_deviation_index = np.argmax(deviations)
+        index = np.argmin(base_dict['time_elapsed'])
         for key in keys:
-            base_dict[key].pop(max_deviation_index)
+            base_dict[key].pop(index)
+
     with open("./data/" + output_name + ".dict", 'wb') as file:
         pickle.dump(base_dict, file, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -80,17 +80,20 @@ def debug():
 def extract_info():
     info = {}
     for name in names:
+        print(name)
         d = np.load("./data/" + name + ".dict", allow_pickle=True)
-        avg_time = 0
         succ_rate = 0
-        for t in d['time_elapsed']:
-            avg_time += t
         for flag in d['within_time_limit']:
             if flag:
                 succ_rate += 1
+        ttime = []
+        for i in range(len(d['time_elapsed'])):
+            if d['within_time_limit'][i]:
+                ttime.append(d['time_elapsed'][i])
+        d['time_elapsed'] = ttime
+        print(len(d['time_elapsed']))
         std_time = np.std(np.array(d['time_elapsed']))
-        avg_time /= len(d['time_elapsed'])
-        print(f"{avg_time},{std_time}")
+        avg_time = np.mean(np.array(d['time_elapsed']))
         succ_rate /= len(d['within_time_limit'])
         info[name + "_avg_time"] = avg_time
         info[name + "_std_time"] = std_time
@@ -209,8 +212,6 @@ def bar_chart():
                 capsize=4, edgecolor='black')
         plt.bar(x + width / 2, at_v[i], width, label='With Vision', color='blue', yerr=std_t_v[i],
                 capsize=4, edgecolor='black')
-        print(f"{at_v[i]}, {std_t_v[i]}")
-        print(f"{at_b[i]}, {std_t_b[i]}")
         plt.xticks(x, persons)
         plt.legend(loc='upper right')
         plt.savefig(f"./pics/{object_names[i]} Time.png")
