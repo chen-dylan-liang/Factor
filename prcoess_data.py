@@ -87,17 +87,24 @@ def extract_info():
             if flag:
                 succ_rate += 1
         ttime = []
+        length=[]
         for i in range(len(d['time_elapsed'])):
             if d['within_time_limit'][i]:
                 ttime.append(d['time_elapsed'][i])
-        d['time_elapsed'] = ttime
-        print(len(d['time_elapsed']))
-        std_time = np.std(np.array(d['time_elapsed']))
-        avg_time = np.mean(np.array(d['time_elapsed']))
+                length.append(np.linalg.norm(np.array(d['targets'][i]-d['pos'][i][0])))
+
+
+
+        std_time = np.std(np.array(ttime))
+        avg_time = np.mean(np.array(ttime))
+        avg_speed = np.mean(np.array(length)) / np.mean(np.array(ttime))
         succ_rate /= len(d['within_time_limit'])
+
+        info[name + "_avg_speed"] = avg_speed
         info[name + "_avg_time"] = avg_time
         info[name + "_std_time"] = std_time
         info[name + "_success_rate"] = succ_rate
+
     return info
 
 
@@ -105,116 +112,70 @@ def bar_chart():
     info = extract_info()
     persons = ["Alan", "Dylan", "TJ"]
     objects = ["long_rod", "short_rod", "box", "sponge"]
-    object_names = ["Long Rod", "Short Rod", "Box", "Sponge Bob"]
+    object_names = ["Long Rod", "Short Rod", "Box", "Ball"]
     sr_b = [[0] * 3 for _ in range(4)]
     sr_v = [[0] * 3 for _ in range(4)]
     at_b = [[0] * 3 for _ in range(4)]
     at_v = [[0] * 3 for _ in range(4)]
-    std_t_b = [[0] * 3 for _ in range(4)]
-    std_t_v = [[0] * 3 for _ in range(4)]
+    st_b = [[0] * 3 for _ in range(4)]
+    st_v = [[0] * 3 for _ in range(4)]
+    as_b = [[0] * 3 for _ in range(4)]
+    as_v = [[0] * 3 for _ in range(4)]
+
+    def find_indices(_key):
+        _idx1=-1
+        _idx2=-1
+        for _i in range(4):
+            if _key.find(objects[_i]) != -1:
+                _idx1 = _i
+                break
+        for _i in range(3):
+            if _key.find(persons[_i]) != -1:
+                _idx2 = _i
+                break
+        return _idx1, _idx2
+
+    def collect_info(vd, bd, _info, _key):
+        if _key.find("vision") != -1:
+            idx1, idx2 = find_indices(_key)
+            vd[idx1][idx2]=_info[_key]
+        else:
+            idx1, idx2 = find_indices(_key)
+            bd[idx1][idx2] = _info[_key]
+
     for k in info.keys():
         # sr
         if k.find("success_rate") != -1:
-            if k.find("vision") != -1:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                sr_v[idx1][idx2] = info[k]
-            else:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                sr_b[idx1][idx2] = info[k]
+            collect_info(sr_v, sr_b, info, k)
         # at
         elif k.find("avg_time") != -1:
-            if k.find("vision") != -1:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                at_v[idx1][idx2] = info[k]
-            else:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                at_b[idx1][idx2] = info[k]
+            collect_info(at_v, at_b, info, k)
         elif k.find("std_time") != -1:
-            if k.find("vision") != -1:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                std_t_v[idx1][idx2] = info[k]
-            else:
-                idx1 = -1
-                idx2 = -1
-                for i in range(3):
-                    if k.find(persons[i]) != -1:
-                        idx2 = i
-                        break
-                for j in range(4):
-                    if k.find(objects[j]) != -1:
-                        idx1 = j
-                        break
-                std_t_b[idx1][idx2] = info[k]
+            collect_info(st_v, st_b, info, k)
+        elif k.find("avg_speed")!=-1:
+            collect_info(as_v, as_b, info, k)
 
     width = 0.4
     x = np.arange(len(persons))
     plt.figure(dpi=300)
-    for i in range(4):
-        plt.clf()
-        plt.title(object_names[i])
-        plt.ylabel("Success Rate")
-        plt.bar(x - width / 2, sr_b[i], width, label='No Vision', color='orange')
-        plt.bar(x + width / 2, sr_v[i], width, label='With Vision', color='blue')
-        plt.xticks(x, persons)
-        plt.legend(loc='upper right')
-        plt.savefig(f"./pics/{object_names[i]} Success.png")
 
-    for i in range(4):
-        plt.clf()
-        plt.title(object_names[i])
-        plt.ylabel("Average Time")
-        plt.bar(x - width / 2, at_b[i], width, label='No Vision', color='orange', yerr=std_t_b[i],
-                capsize=4, edgecolor='black')
-        plt.bar(x + width / 2, at_v[i], width, label='With Vision', color='blue', yerr=std_t_v[i],
-                capsize=4, edgecolor='black')
-        plt.xticks(x, persons)
-        plt.legend(loc='upper right')
-        plt.savefig(f"./pics/{object_names[i]} Time.png")
+    def plot_std_bar(ylabel, file_name,avg_v, avg_b, std_v, std_b):
+        for _i in range(4):
+            plt.clf()
+            plt.title(object_names[_i])
+            plt.ylabel(ylabel)
+            plt.bar(x - width / 2, avg_b[_i], width, label='No Vision', color='orange', yerr=std_b[_i],
+                    capsize=4, edgecolor='black')
+            plt.bar(x + width / 2, avg_v[_i], width, label='With Vision', color='blue', yerr=std_v[_i],
+                    capsize=4, edgecolor='black')
+            plt.xticks(x, persons)
+            plt.legend(loc='upper right')
+            plt.savefig(f"./pics/{object_names[_i]} {file_name}.png")
+
+    plot_std_bar("Average Time", "Time", at_v, at_b, st_v, st_b)
+    plot_std_bar("Performance", "Performance", as_v, as_b, [None]*4, [None]*4)
+    plot_std_bar("Success Rate", "Success", sr_v, sr_b, [None] * 4, [None] * 4)
+
 
 
 if __name__ == "__main__":
