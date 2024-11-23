@@ -7,6 +7,7 @@ import keyboard
 from threading import Thread
 import pickle
 
+
 def generate_point(min_val, max_val):
     point = np.random.rand(3)
     point = min_val + point * (max_val - min_val)
