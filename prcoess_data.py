@@ -94,7 +94,7 @@ def extract_info():
                 length.append(np.linalg.norm(np.array(d['targets'][i]-d['pos'][i][0])))
 
 
-
+        print(len(ttime))
         std_time = np.std(np.array(ttime))
         avg_time = np.mean(np.array(ttime))
         avg_speed = np.mean(np.array(length)) / np.mean(np.array(ttime))
@@ -113,14 +113,14 @@ def bar_chart():
     persons = ["Alan", "Dylan", "TJ"]
     objects = ["long_rod", "short_rod", "box", "sponge"]
     object_names = ["Long Rod", "Short Rod", "Box", "Ball"]
-    sr_b = [[0] * 3 for _ in range(4)]
-    sr_v = [[0] * 3 for _ in range(4)]
-    at_b = [[0] * 3 for _ in range(4)]
-    at_v = [[0] * 3 for _ in range(4)]
-    st_b = [[0] * 3 for _ in range(4)]
-    st_v = [[0] * 3 for _ in range(4)]
-    as_b = [[0] * 3 for _ in range(4)]
-    as_v = [[0] * 3 for _ in range(4)]
+    sr_b = np.zeros((4,3))
+    sr_v = np.zeros((4,3))
+    at_b = np.zeros((4,3))
+    at_v = np.zeros((4,3))
+    st_b = np.zeros((4,3))
+    st_v = np.zeros((4,3))
+    as_b = np.zeros((4,3))
+    as_v = np.zeros((4,3))
 
     def find_indices(_key):
         _idx1=-1
@@ -156,10 +156,10 @@ def bar_chart():
             collect_info(as_v, as_b, info, k)
 
     width = 0.4
-    x = np.arange(len(persons))
     plt.figure(dpi=300)
 
-    def plot_std_bar(ylabel, file_name,avg_v, avg_b, std_v, std_b):
+    def plot_std_bar_per_object(ylabel, file_name,avg_v, avg_b, std_v, std_b):
+        x = np.arange(len(persons))
         for _i in range(4):
             plt.clf()
             plt.title(object_names[_i])
@@ -172,13 +172,59 @@ def bar_chart():
             plt.legend(loc='upper right')
             plt.savefig(f"./pics/{object_names[_i]} {file_name}.png")
 
-    plot_std_bar("Average Time", "Time", at_v, at_b, st_v, st_b)
-    plot_std_bar("Performance", "Performance", as_v, as_b, [None]*4, [None]*4)
-    plot_std_bar("Success Rate", "Success", sr_v, sr_b, [None] * 4, [None] * 4)
+    def plot_std_bar_per_person(ylabel, file_name,avg_v, avg_b, std_v, std_b):
+        x = np.arange(len(objects))
+        for _i in range(3):
+            plt.clf()
+            plt.title(persons[_i])
+            plt.ylabel(ylabel)
+            plt.bar(x - width / 2, avg_b[_i], width, label='No Vision', color='orange', yerr=std_b[_i],
+                    capsize=4, edgecolor='black')
+            plt.bar(x + width / 2, avg_v[_i], width, label='With Vision', color='blue', yerr=std_v[_i],
+                    capsize=4, edgecolor='black')
+            plt.xticks(x, object_names)
+            plt.legend(loc='upper right')
+            plt.savefig(f"./pics/{persons[_i]} {file_name}.png")
 
+
+    perf_person_v = np.diag(sr_v.transpose()@as_v)
+    perf_person_b = np.diag(sr_b.transpose()@as_b)
+    perf_obj_v = np.diag(sr_v@as_v.transpose())
+    perf_obj_b = np.diag(sr_b@as_b.transpose())
+
+    plot_std_bar_per_object("Success Rate", "Success", sr_v, sr_b, [None] * 4, [None] * 4)
+    plot_std_bar_per_person("Success Rate", "Success", sr_v.transpose(), sr_b.transpose(), [None] * 3, [None] * 3)
+
+
+    # performance persons
+    plt.clf()
+    plt.title("Average Performance Participants")
+    plt.ylabel("Performance")
+    xx = np.arange(len(persons))
+    plt.bar(xx - width / 2, perf_person_b, width, label='No Vision', color='orange', yerr=None,
+            capsize=4, edgecolor='black')
+    plt.bar(xx + width / 2, perf_person_v, width, label='With Vision', color='blue', yerr=None,
+            capsize=4, edgecolor='black')
+    plt.xticks(xx, persons)
+    plt.legend(loc='upper right')
+    plt.savefig(f"./pics/Performance Participants.png")
+
+    # performance objects
+    plt.clf()
+    plt.title("Average Performance Objects")
+    plt.ylabel("Performance")
+    xx = np.arange(len(objects))
+    plt.bar(xx - width / 2, perf_obj_b, width, label='No Vision', color='orange', yerr=None,
+            capsize=4, edgecolor='black')
+    plt.bar(xx + width / 2, perf_obj_v, width, label='With Vision', color='blue', yerr=None,
+            capsize=4, edgecolor='black')
+    plt.xticks(xx, object_names)
+    plt.legend(loc='upper right')
+    plt.savefig(f"./pics/Performance Objects.png")
 
 
 if __name__ == "__main__":
     concat_all()
     debug()
     bar_chart()
+
