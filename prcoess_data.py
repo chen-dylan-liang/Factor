@@ -8,6 +8,7 @@ import math
 import copy
 from sklearn.linear_model import LinearRegression
 import random
+from mpl_toolkits.mplot3d import Axes3D
 
 keys = ["targets", "drop", "within_time_limit", "time_elapsed", "hardware_error", "pos"]
 names = ["TJ_box", "TJ_short_rod", "TJ_long_rod", "TJ_sponge",
@@ -20,6 +21,7 @@ names = ["TJ_box", "TJ_short_rod", "TJ_long_rod", "TJ_sponge",
 persons = ["Alan", "Dylan", "TJ"]
 objects = ["long_rod", "short_rod", "box", "sponge"]
 object_names = ["Long Rod", "Short Rod", "Box", "Ball"]
+
 
 def correct_pos(ddict):
     start = 0
@@ -114,10 +116,15 @@ def extract_info():
                 ttime.append(d['time_elapsed'][i])
                 length.append(np.linalg.norm(d['targets'][i]-d['pos'][i][0]))
                 td = 0
-                for j in range(len(d['pos'][i])-1):
-                    td+=np.linalg.norm(d['pos'][i][j+1] - d['pos'][i][j])
+                if len(d['pos'][i])==1:
+                    td = np.sum(np.abs(d['targets'][i]- d['pos'][i][0]))
+                else:
+                    for j in range(len(d['pos'][i])-1):
+                        td+=np.sum(np.abs(d['pos'][i][j+1] - d['pos'][i][j]))
+
                 if td < length[-1]:
                     td = length[-1] + random.random()
+
                 traveled_dist.append(td)
                 euc_dist.append(length[-1])
 
@@ -366,9 +373,39 @@ def scatter_plot():
     plt.legend(loc='upper left')
     plt.savefig(f"./pics/Scatter Vision.png")
 
-if __name__ == "__main__":
-   # concat_all()
-   # debug()
-   # bar_chart()
+def draw_3d_traj():
+    ddict=np.load("./data/Alan_box.dict", allow_pickle=True)
+    traj = ddict['pos']
+    targets = np.array(ddict['targets'])
+    min_pos = ddict['min_pos']
+    max_pos = ddict['max_pos']
+    diff = max_pos - min_pos
+    k=3
+    traj=np.array(traj[k])
+    diff1 = np.abs(traj[-1] - traj[0])
+    print(traj.shape)
+    # Create a figure and 3D axis
+    fig = plt.figure(dpi=300)
+    ax = fig.add_subplot(111, projection='3d')
+    ax.set_xticks([300, 350, 400, 450])  # Fewer ticks on the x-axis
+    ax.set_yticks([-100, -50, 0, 50, 100])  # Fewer ticks on the y-axis
+    ax.set_zticks([325, 375, 425, 475])  # Fewer ticks on the z-axis
+    cmap = get_cmap('Pastel1')  # Or 'Pastel2'
+    colors = [cmap(0), cmap(1), cmap(2)]
+    # Scatter plot of the 3D points
+    ax.set_box_aspect([diff1[0], diff1[1], diff1[2]])
+    ax.plot(traj[:,0], traj[:,1], traj[:,2],  color='blue', label='Trajectory')
+    ax.scatter(targets[k][0], targets[k][1], targets[k][2], color='orange', s=50,label='Targets')
+    ax.scatter(traj[0][0],traj[0][1],traj[0][2], color='blue', s=15,label='Start')
+    # Adding labels and title
+    ax.set_xlabel('X')
+    ax.set_ylabel('Y')
+    ax.set_zlabel('Z')
+    ax.legend(loc='upper left')
+    plt.savefig(f"./pics/3D Traj.png")
 
-   scatter_plot()
+
+
+if __name__ == "__main__":
+    #scatter_plot()
+    draw_3d_traj()
