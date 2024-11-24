@@ -395,7 +395,7 @@ def draw_3d_traj():
     # Scatter plot of the 3D points
     ax.set_box_aspect([diff1[0], diff1[1], diff1[2]])
     ax.plot(traj[:,0], traj[:,1], traj[:,2],  color='blue', label='Trajectory')
-    ax.scatter(targets[k][0], targets[k][1], targets[k][2], color='orange', s=50,label='Targets')
+    ax.scatter(targets[k][0], targets[k][1], targets[k][2], color='orange', s=50,label='Target')
     ax.scatter(traj[0][0],traj[0][1],traj[0][2], color='blue', s=15,label='Start')
     # Adding labels and title
     ax.set_xlabel('X')
