@@ -37,7 +37,7 @@ def evaluate(name, arm, n, dur, tol, range_tract=0.7):
     data_to_store = {'min_pos': min_pos, 'max_pos': max_pos,
                      'targets': [], 'drop': [], 'within_time_limit': [], 'time_elapsed': [],
                      'hardware_error': [],
-                     'pos': [[]] * n}
+                     'pos': [[]] * n }  # wrong design for pos
     # evaluate
     for i in range(n):
         point = generate_point(min_pos, max_pos)
