@@ -15,6 +15,8 @@
     - Setting "_look_ahead" too low (such as 1) may result in jerky and slow movements. Recommended value is 10 if not unstable motions are observed.
     - Press "enter" to start testing the model
     - Press "esc" after "dur" seconds to set the arm back to the initial position
+
+- The training data are 10 one-minute trajectories: raw_data/traj_new_all_dir_{1-10}.traj.
  
 Slides:
 1. Pitch: https://docs.google.com/presentation/d/1ew2qczEkUWNBvHf2gIASGTlScKLhjqRN/edit?usp=sharing&ouid=108918866099544253796&rtpof=true&sd=true
