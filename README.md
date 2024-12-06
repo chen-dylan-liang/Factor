@@ -1,4 +1,5 @@
-### The Course Project for Yale CPSC 473/573, Intelligent Robotics Laboratory
+# FACTOR: Force-Assisted Collaborative Object Repositioning
+### A Course Project for Yale CPSC 473/573, Intelligent Robotics Laboratory
 ***Alan Chirong Li, Chen (Dylan) Liang, TJ Vitchuripop***
 
 - ***sudo python3 collect_data.py ip_address traj_name***
